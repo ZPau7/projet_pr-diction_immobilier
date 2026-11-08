@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prédiction du prix immobilier</title>
+    <style>
+        :root {
+            --gradient-1: linear-gradient(to right, #e6e9ff, #f0e6ff);
+            --gradient-2: linear-gradient(to right, #ffb5d8, #ffd6e7);
+            --primary-color: #7a4de8;
+            --primary-dark: #413076;
+            --text-color: #333;
+            --light-bg: #fafaff;
+            --shadow-light: rgba(0, 0, 0, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1em;
+            background-color: var(--light-bg);
+            display: flex;
+            flex-direction: row;
+            overflow-x: hidden;
+            height: 100vh;
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            background: var(--gradient-1);
+            width: 220px;
+            min-width: 220px;
+            padding: 20px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            height: calc(100vh - 40px);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px var(--shadow-light);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sidebar h2 {
+            font-size: 25px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .sidebar a {
+            display: block;
+            margin: 12px 0;
+            text-decoration: none;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: color 0.3s;
+        }
+
+        .sidebar a:hover {
+            text-decoration: underline;
+            color: var(--primary-color);
+        }
+
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 260px;
+            right: 20px;
+            height: 70px;
+            background: var(--gradient-1);
+            border-radius: 15px;
+            padding: 0 30px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px var(--shadow-light);
+            z-index: 1000;
+            width: calc(100% - 280px);
+            font-weight: 700;
+            color: var(--primary-dark);
+            user-select: none;
+        }
+
+        .main {
+            display: flex;
+            gap: 40px;
+            margin-top: 120px;
+            margin-left: 260px;
+            padding: 40px 40px 60px 40px;
+            width: calc(100%);
+            max-width: none;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 25px var(--shadow-light);
+            box-sizing: border-box;
+            font-size: 1em;
+            overflow-y: auto;
+            min-height: calc(100vh - 160px);
+            justify-content: center;
+        }
+
+        .form-container {
+            flex: 1;
+            max-width: 650px;
+        }
+
+        form label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--primary-dark);
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background-color: #f7f7ff;
+            font-size: 1.05em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-weight: 500;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px rgba(122, 77, 232, 0.4);
+            outline: none;
+        }
+
+        input[type="submit"] {
+            background: linear-gradient(to right, #8961ec, #b183ea);
+            color: white;
+            padding:10px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.12em;
+            font-weight: 700;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 6px 16px rgba(122, 77, 232, 0.3);
+            user-select: none;
+            margin-top: 10px;
+            width: 100%; /* Ajouté pour prendre toute la largeur */
+            box-shadow: none; /* Supprime les ombres */
+        }
+        
+
+        input[type="submit"]:hover {
+            background: linear-gradient(to right, #6544c0, #8b65eb);
+            transform: scale(1);
+            box-shadow: 0 5px 10px rgba(122, 77, 232, 0.5);
+        }
+
+        label input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .prediction-container {
+            flex-basis: 320px;
+            border-radius: 15px;
+            padding: 25px 20px;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .prediction-box {
+            background-color: #faf4ff;
+            border: 2px solid var(--primary-color);
+            padding: 20px 15px;
+            border-radius: 12px;
+            /*box-shadow: 0 4px 14px rgba(122, 77, 232, 0.15);*/
+            text-align: center;
+        }
+
+        .prediction-text {
+            font-size: 1.4em;
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .percentage-text {
+            font-size: 1em;
+            color: #7b7b9d;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                justify-content: space-around;
+                margin: 0;
+                padding: 10px;
+                border-radius: 0;
+            }
+
+            .header {
+                position: static;
+                width: 100%;
+                left: 0;
+                top: 0;
+                border-radius: 0;
+                margin: 0;
+                padding: 10px;
+                justify-content: center;
+                font-size: 1.4em;
+            }
+
+            .main {
+                flex-direction: column;
+                margin-left: 0;
+                padding: 20px;
+                width: 100%;
+                max-width: 100%;
+                min-height: auto;
+            }
+
+            .form-container,
+            .prediction-container {
+                max-width: 100%;
+                flex-basis: auto;
+                padding: 0;
+                margin-bottom: 25px;
+            }
+        }
+            /* Checkbox inline */
+        .checkbox-group {
+            margin-bottom: 1.6rem;
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--blue-dark);
+            user-select: none;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--blue-medium);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='logo_immo.png') }}" alt="ImmoScope Logo" style="width: 100%; max-width: 200px; margin-bottom: 20px; border-radius: 8px;" />
+        <h2>Menu</h2>
+        <a href="/">🏠 Prédiction</a>
+        <a href="/about">ℹ️ À propos</a>
+    </div>
+
+    <div class="header">
+        🏘️ Prédiction Immobilière Paris et Val-de-Marne 
+    </div>
+
+    <div class="main">
+        <div class="form-container">
+            <form method="POST" action="/predict">
+                <label for="arrondissement">Arrondissement :</label>
+                <select name="arrondissement" id="arrondissement" required>
+                    <optgroup label="Paris">
+                        {% for code in range(75001, 75021) %}
+                            <option value="arrdt_{{ code }}">Paris {{ code - 75000 }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Val-de-Marne (94)">
+                        <option value="arrdt_94100">Saint-Maur-des-Fossés</option>
+                        <option value="arrdt_94110">Arcueil</option>
+                        <option value="arrdt_94120">Fontenay-sous-Bois</option>
+                        <option value="arrdt_94130">Nogent-sur-Marne</option>
+                        <option value="arrdt_94140">Alfortville</option>
+                        <option value="arrdt_94150">Rungis</option>
+                        <option value="arrdt_94160">Saint-Mandé</option>
+                        <option value="arrdt_94170">Le Perreux-sur-Marne</option>
+                        <option value="arrdt_94190">Villeneuve-Saint-Georges</option>
+                        <option value="arrdt_94200">Ivry-sur-Seine</option>
+                        <option value="arrdt_94205">Charenton-le-Pont</option>
+                        <option value="arrdt_94210">La Varenne-Saint-Hilaire</option>
+                        <option value="arrdt_94220">Charenton-le-Pont</option>
+                        <option value="arrdt_94230">Cachan</option>
+                        <option value="arrdt_94240">L’Haÿ-les-Roses</option>
+                        <option value="arrdt_94250">Gentilly</option>
+                        <option value="arrdt_94260">Fresnes</option>
+                        <option value="arrdt_94270">Le Kremlin-Bicêtre</option>
+                        <option value="arrdt_94290">Villeneuve-le-Roi</option>
+                        <option value="arrdt_94300">Vincennes</option>
+                        <option value="arrdt_94310">Orly</option>
+                        <option value="arrdt_94320">Thiais</option>
+                        <option value="arrdt_94340">Joinville-le-Pont</option>
+                        <option value="arrdt_94350">Villiers-sur-Marne</option>
+                        <option value="arrdt_94360">Bry-sur-Marne</option>
+                        <option value="arrdt_94370">Sucy-en-Brie</option>
+                        <option value="arrdt_94380">Bonneuil-sur-Marne</option>
+                        <option value="arrdt_94400">Vitry-sur-Seine</option>
+                        <option value="arrdt_94410">Saint-Maurice</option>
+                        <option value="arrdt_94420">Le Plessis-Trévise</option>
+                        <option value="arrdt_94430">Chennevières-sur-Marne</option>
+                        <option value="arrdt_94440">Marolles-en-Brie</option>
+                        <option value="arrdt_94450">Limeil-Brévannes</option>
+                        <option value="arrdt_94460">Valenton</option>
+                        <option value="arrdt_94470">Boissy-Saint-Léger</option>
+                        <option value="arrdt_94480">Ablon-sur-Seine</option>
+                        <option value="arrdt_94490">Ormesson-sur-Marne</option>
+                        <option value="arrdt_94500">Champigny-sur-Marne</option>
+                        <option value="arrdt_94510">La Queue-en-Brie</option>
+                        <option value="arrdt_94520">Mandres-les-Roses</option>
+                        <option value="arrdt_94550">Chevilly-Larue</option>
+                        <option value="arrdt_94600">Choisy-le-Roi</option>
+                        <option value="arrdt_94700">Maisons-Alfort</option>
+                        <option value="arrdt_94800">Villejuif</option>
+                        <option value="arrdt_94880">Noiseau</option>
+                    </optgroup>
+                </select>
+
+                <label for="superficie">Superficie (m²) :</label>
+                <input type="number" name="superficie" id="superficie" step="any" required />
+
+                <label for="pieces">Nombre de pièces :</label>
+                <input type="number" name="pieces" id="pieces" required />
+
+                <label for="chambres">Nombre de chambres :</label>
+                <input type="number" name="chambres" id="chambres" required />
+
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="cave" /> Cave</label>
+                    <label><input type="checkbox" name="ascenseur" /> Ascenseur</label>
+                    <label><input type="checkbox" name="gardien" /> Gardien</label>
+                </div>
+
+
+                <input type="submit" value="Prédire" />
+            </form>
+        </div>
+
+        <div class="prediction-container">
+            {% if prediction_text %}
+            <div class="prediction-box">
+                <div class="prediction-text">{{ prediction_text }}</div>
+                <div class="percentage-text">
+                    Précision de la prédiction : {{ prediction_percentage }}%
+                </div>
+            </div>
+            {% else %}
+            <div style="color:#999; font-style: italic; text-align:center;">
+                Les résultats de prédiction s'afficheront ici.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
